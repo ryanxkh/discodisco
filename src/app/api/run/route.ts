@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { runPipeline } from "@/lib/pipeline";
 import { ModeSchema } from "@/lib/schemas";
+import { checkAndIncrement, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 90;
@@ -26,6 +27,25 @@ export async function POST(req: NextRequest) {
     );
   }
   const { paste, mode } = parsed.data;
+
+  const ip = getClientIp(req);
+  const limit = await checkAndIncrement(ip);
+  if (!limit.ok) {
+    return Response.json(
+      {
+        error: "rate_limited",
+        message:
+          "You've used your 10 runs for today. The limit resets at UTC midnight.",
+        retryAfterSeconds: limit.retryAfterSeconds,
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(limit.retryAfterSeconds),
+        },
+      },
+    );
+  }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
