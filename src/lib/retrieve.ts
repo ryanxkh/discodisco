@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import { embed } from "ai";
 import { neon } from "@neondatabase/serverless";
+import { embed } from "./braintrust";
 import type { Prospect, SectionName } from "./schemas";
 
 export type RetrievedChunk = {

@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai";
+import { generateText, Output, trace } from "./braintrust";
 import {
   ParseResultSchema,
   narrowParseResult,
@@ -8,7 +8,9 @@ import { spineForPrompt } from "./spine";
 
 const PARSE_MODEL = "anthropic/claude-haiku-4.5";
 
-export async function parseProspect(paste: string): Promise<ParseResult> {
+export const parseProspect = trace("parseProspect", _parseProspect);
+
+async function _parseProspect(paste: string): Promise<ParseResult> {
   const trimmed = paste.trim();
   if (trimmed.length < 80) {
     return {

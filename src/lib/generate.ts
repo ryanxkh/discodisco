@@ -1,4 +1,9 @@
-import { generateText, Output, type FlexibleSchema } from "ai";
+import {
+  generateText,
+  Output,
+  trace,
+  type FlexibleSchema,
+} from "./braintrust";
 import {
   SECTION_SCHEMAS,
   type Mode,
@@ -57,7 +62,9 @@ export type SectionResult = {
   citations: Array<{ sourceFile: string; sourceTitle: string }>;
 };
 
-export async function generateSection(
+export const generateSection = trace("generateSection", _generateSection);
+
+async function _generateSection(
   section: SectionName,
   prospect: Prospect,
   mode: Mode,
