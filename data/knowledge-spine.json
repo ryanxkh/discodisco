@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-04-30",
+  "note": "Always-in-context spine for discodisco. Facts must be defensible — sourced from research/, dated, and quotable in a sales conversation. Update with care.",
+  "cards": [
+    {
+      "id": "vercel-platform-overview",
+      "type": "product",
+      "title": "Vercel platform — what it actually is, in 2026",
+      "one_liner": "The frontend cloud and AI app platform: Edge Network + Fluid Compute + AI Gateway/SDK + v0, with Next.js as the gravitational center.",
+      "facts": [
+        "Fluid Compute powers 45B+ weekly requests across the platform.",
+        "Series F (Oct 2025): $300M raised, ~$9.3B valuation, 82% YoY top-line growth, doubled user base.",
+        "Next.js exceeded 500M downloads in 12 months; remains the dominant React meta-framework.",
+        "Core surface: Edge Network, Functions (Fluid), Cache Components / ISR, Routing Middleware (formerly middleware), AI Gateway, AI SDK, Workflow, Sandbox, v0.",
+        "Self-Driving Infrastructure thesis: platform handles compute model selection, scaling, caching, and now AI provider routing — so app teams don't operate infra."
+      ],
+      "use_when": "Always. Anchors the model in what Vercel is before discussing specific products."
+    },
+    {
+      "id": "fluid-compute-and-pricing",
+      "type": "product",
+      "title": "Fluid Compute + Active CPU pricing — the cost story",
+      "one_liner": "Fluid pauses billing during I/O wait. Active CPU pricing is ~53% cheaper baseline and up to 90% cheaper for AI/I/O-heavy workloads — directly fixes the 'serverless is expensive for AI' objection.",
+      "facts": [
+        "Active CPU pricing (GA June 2025): $0.128/CPU-hour vs. legacy ~$0.318/CPU-hour — 53% cheaper.",
+        "Up to 90% savings for AI inference workloads where most time is idle waiting on LLM responses.",
+        "Typical 5s LLM call → ~50ms active CPU = ~99% reduction in billable CPU time vs. duration-based billing.",
+        "300s default function timeout (vs. 60–90s legacy serverless); Fluid extends further on appropriate plans.",
+        "In-function concurrency: a single Fluid instance handles many concurrent I/O-bound requests instead of spinning new cold instances.",
+        "AI Gateway sits on the same CDN that powers trillions of requests/year — sub-20ms gateway overhead."
+      ],
+      "use_when": "Cost objections, AI workload deals, comparisons vs. AWS Lambda / Netlify Functions / Cloudflare Workers pricing."
+    },
+    {
+      "id": "ai-platform-stack",
+      "type": "product",
+      "title": "Vercel's AI stack — Gateway, SDK, v0, Sandbox, Workflow",
+      "one_liner": "Unified AI development surface: one API key (Gateway) for 20+ providers, AI SDK 6 with ToolLoopAgent + MCP, v0 for prompt-to-production UI, Sandbox for safe code exec.",
+      "facts": [
+        "AI Gateway: 20+ LLM providers behind one API, zero token markup (pay provider list prices), built-in failover, observability.",
+        "AI SDK 6: TypeScript-first; ToolLoopAgent class is the production-ready agent primitive; native MCP (Model Context Protocol) with HTTP transport + OAuth.",
+        "v0: prompt-to-app product; v0-1.5-lg has 512K-token context; reportedly $42M ARR (~21% of Vercel revenue).",
+        "Sandbox: Firecracker microVMs with credential brokering — inject API keys into outgoing requests without exposing them to executed code. Notion Workers runs millions of concurrent Sandbox executions.",
+        "Workflow (WDK): durable, crash-safe, step-based orchestration for long-running AI/agent tasks with pause/resume + retries."
+      ],
+      "use_when": "AI/agent product teams; prospects building chatbots, agents, RAG, or anything LLM-shaped."
+    },
+    {
+      "id": "icp-buyer-types",
+      "type": "icp",
+      "title": "ICP — three buyer profiles where Vercel actually fits",
+      "one_liner": "Next.js-native growth startups, enterprise digital commerce, and AI-native product teams. Outside these, qualify hard.",
+      "facts": [
+        "**Next.js-native growth startups (Series A–C, ~10–100 eng):** Already on Next.js or about to be. Pain: own infra is slowing shipping; AWS bill creeping. Decision driver: DX + speed-to-ship. Champion is usually a senior IC or eng lead.",
+        "**Enterprise digital commerce / B2C (retail, media, travel):** Black Friday / peak-traffic problems, A/B testing velocity, conversion lift. Champion: dir/VP of digital + a frontend platform team. Decision driver: ISR + edge perf + preview envs.",
+        "**AI-native product teams:** Building chatbots/agents/copilots, hitting Lambda cost ceilings on idle waits. Decision driver: Fluid Active CPU + Gateway unification. Champion: founding eng or AI platform lead.",
+        "Anti-ICP signals: WebSocket-heavy realtime (no native support), heavy background-job workloads (need Inngest/QStash/Trigger.dev), strict on-prem / air-gap / FedRAMP-required, frameworks-other-than-Next where Netlify or Cloudflare may serve as well."
+      ],
+      "use_when": "Always — gates whether Vercel is even the right call before going deeper."
+    },
+    {
+      "id": "case-study-bank",
+      "type": "case-study",
+      "title": "Top case studies — pick the closest match by industry/buyer",
+      "one_liner": "Forrester ROI for the CFO; sportswear/Helly Hansen for retail; Stripe/Notion/Avalara for the AI builder.",
+      "facts": [
+        "**Forrester TEI (composite):** 264% ROI over 3 years, $9.53M NPV; 90% less time managing frontend infra; 80% less time deploying; 4x more major site enhancements/year.",
+        "**Global sportswear brand (NYSE, ~$6B rev):** $10M incremental quarterly online sales; 5x conversion lift at peak; 125k visitors/hour at peak; first Black Friday with zero downtime.",
+        "**Helly Hansen:** 80% YoY Black Friday growth with zero downtime; 2x conversion lift; marketing spend tripled mid-campaign because it was so profitable; A/B test cadence went from 1/month → 5–6/sprint.",
+        "**Stripe (v0):** built by a non-engineer on one flight; 288% WAU growth (23 → 92); ~10 new internal presentations/week; 30–40 FTE hours saved/week.",
+        "**Avalara (v0):** two patent-pending products in ~60 days; concept-to-prototype in days vs. months.",
+        "**Notion Workers (Sandbox):** millions of concurrent executions of arbitrary third-party code, secured via Firecracker + credential injection.",
+        "**Cruise Critic, Stably, Gamma, Grep (CRA→Next.js):** mid-market migration / perf / build-time wins; available as long-tail RAG."
+      ],
+      "use_when": "Drop a single closest-match case study (AE) or top 3 with rationale (SE/SA)."
+    },
+    {
+      "id": "objections-technical",
+      "type": "objection-bank",
+      "title": "Real technical pushbacks — be ready",
+      "one_liner": "WebSockets, background jobs, FedRAMP, EU data residency, and one famous CVE. Don't pretend these don't exist.",
+      "facts": [
+        "**No native WebSocket support** — long-running stateful connections aren't first-class. Workaround: pair with Pusher/Ably/Convex.",
+        "**No background-jobs primitive** — push to Inngest, QStash, or Trigger.dev. Workflow (WDK) is durable but request/event-shaped, not a queue replacement.",
+        "**Function timeout** — 60s on Pro by default; Fluid extends meaningfully on Enterprise; not a fit for hour-long jobs.",
+        "**CVE-2025-29927 (CVSS 9.1):** Next.js Middleware authorization bypass via `x-middleware-subrequest` header — affected 11–15. Patched. SAs should know it exists; expect security teams to ask.",
+        "**Data residency:** No data is stored permanently inside EU regions (compute can run there; persistence is the gap). Sovereign-cloud / FedRAMP customers are out of fit.",
+        "**ISR / edge-config write costs** ($4.00/1M ISR writes, $5.00/500 edge-config writes) compound on aggressive revalidation — catch this in scoping."
+      ],
+      "use_when": "Objection-prep section. Use only when the prospect's signals match (don't volunteer FedRAMP for a 20-person AI startup)."
+    },
+    {
+      "id": "objections-commercial",
+      "type": "objection-bank",
+      "title": "Real commercial pushbacks — pricing, lock-in, support",
+      "one_liner": "Pricing unpredictability is the #1 objection. Surface it first, then frame Active CPU + Spend Management as the answer.",
+      "facts": [
+        "**Pricing unpredictability** is the most-cited objection — multi-dimensional metering (compute + bandwidth + ISR + edge config + image optimization) makes monthly forecasting hard.",
+        "**Public horror stories:** Riley Walz $46,485 bill (Feb 2026, static site, bandwidth overage); Cara $98,280 in Functions charges during a viral surge.",
+        "**No hard spending caps** historically — Spend Management (default $200 alert on new Pro teams, hard-pause optional) is the answer; lead with this in objection prep.",
+        "**Vendor lock-in at the runtime layer:** ISR, Routing Middleware, image optimization, on-demand `revalidatePath()` are Vercel-native. Self-hosting Next.js loses or degrades these. Frame as 'platform value, not artificial lock-in.'",
+        "**Support tier reality:** Pro has no SLA; Enterprise gets response-time guarantees. For mid-market deals where support matters, this lives in the deal scope.",
+        "**Enterprise entry point:** ~$20K–$25K/year typical floor; v0 Enterprise has been seen at ~$100/user/month + ~$18K platform fee for 20 seats."
+      ],
+      "use_when": "Pricing/finance objections, procurement conversations, anyone burned by previous serverless bills."
+    },
+    {
+      "id": "competitive-positioning",
+      "type": "competitive",
+      "title": "Competitive read — Netlify, Cloudflare, AWS Amplify",
+      "one_liner": "Netlify is the most common comparison and the gap is widening. Cloudflare wins on edge/cost stories. Amplify is enterprise-priced but operationally complex.",
+      "facts": [
+        "**vs. Netlify:** Vercel ~$200M ARR @ ~80% YoY (May 2025) vs. Netlify ~$46M @ ~40% YoY. Vercel $9.3B valuation vs. Netlify $2B (no round since Nov 2021). Fluid + Active CPU pricing has no Netlify equivalent. On-demand ISR (revalidatePath) is Vercel-only; Netlify supports time-based ISR.",
+        "**vs. Netlify (where they win):** framework-agnostic story (Astro / SvelteKit / Nuxt treated equally), Netlify Connect for CMS-heavy data unification, free tier permits commercial use (Vercel doesn't), Bolt.new partnership traction.",
+        "**vs. Cloudflare Workers / Pages:** Cloudflare wins on raw edge cost and global compute footprint; Vercel wins on Next.js DX, framework ergonomics, ISR, and AI SDK integration.",
+        "**vs. AWS Amplify:** rarely beats Vercel on velocity; usually appears when a customer has heavy AWS commit / IAM-deep integration. Frame as 'Amplify is Lambda + S3 + CloudFront stitched by you; Vercel is the platform.'",
+        "**v0 has no real competitor at parity** for prompt-to-production-React-code with Vercel deploy in the loop — Netlify Create (acquired) is CMS-shaped, not code-gen."
+      ],
+      "use_when": "Competitive section (SE/SA). For AE: just call the likely competitor and 1–2 differentiators."
+    },
+    {
+      "id": "methodology-tags",
+      "type": "methodology",
+      "title": "MEDDPICC + SPICED dual-tag legend",
+      "one_liner": "Every discovery question must dual-tag against both methodologies so reps can show qualification work to managers using either framework.",
+      "facts": [
+        "**MEDDPICC** = Metrics, Economic buyer, Decision criteria, Decision process, Paper process, Identify pain, Champion, Competition.",
+        "**SPICED** = Situation, Pain, Impact, Critical event, Decision.",
+        "Dual-tag rule: each discovery question must be tagged with at least one MEDDPICC letter AND at least one SPICED letter. If a question maps to neither, it's filler — cut it.",
+        "Coaching note (the WHY): for SE/SA mode, every question also gets a 1-line coaching note explaining what skilled-listening signals the rep should listen for in the answer."
+      ],
+      "use_when": "Always. Every generated discovery question must come back with both tags. The model uses this card as a compliance check."
+    }
+  ]
+}

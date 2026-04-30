@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:ext": "dotenv -e .env.local -- tsx scripts/db-extensions.ts",
+    "db:push": "dotenv -e .env.local -- drizzle-kit push --force",
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "ingest": "dotenv -e .env.local -- tsx scripts/ingest.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
