@@ -13,95 +13,80 @@ export const SectionNameSchema = z.enum([
 ]);
 export type SectionName = z.infer<typeof SectionNameSchema>;
 
+export const BuyerTypeSchema = z.enum([
+  "next-native-startup",
+  "headless-cms-migration",
+  "headless-commerce-migration",
+  "custom-spa-migration",
+  "enterprise-commerce",
+  "ai-native",
+  "other-or-unclear",
+]);
+export type BuyerType = z.infer<typeof BuyerTypeSchema>;
+
 export const ProspectSchema = z.object({
-  company: z.string().describe("Company name. Use 'Unknown' if not stated."),
-  industry: z.string().describe("Industry / sector in 1-3 words."),
+  company: z
+    .string()
+    .describe(
+      "Company name as stated in the paste. Use 'Unknown' only if no company name appears anywhere.",
+    ),
+  industry: z.string().describe("Industry / sector in 1-3 words. 'Unknown' if not inferable."),
   role: z
     .string()
-    .describe("Primary contact's role/title. Use 'Unknown' if not stated."),
+    .describe(
+      "Primary contact's role/title. 'Unknown' if no contact mentioned.",
+    ),
   stage: z
     .string()
     .describe(
-      "Company stage (e.g., 'Series B SaaS', 'mid-market enterprise'). 'Unknown' if not clear.",
+      "Company stage (e.g., 'Series B SaaS', 'mid-market enterprise', 'bootstrapped'). 'Unknown' if not clear.",
     ),
   signals: z
     .array(z.string())
-    .min(2)
-    .max(7)
-    .describe("Concrete buyer signals extracted from the paste."),
+    .min(0)
+    .max(10)
+    .describe(
+      "Concrete buyer signals extracted from the paste. Can be empty if paste is sparse.",
+    ),
   pains: z
     .array(z.string())
-    .max(5)
+    .max(7)
     .describe("Hinted pains/problems. Empty array if none stated."),
-  buyerType: z
-    .enum([
-      "next-native-startup",
-      "enterprise-commerce",
-      "ai-native",
-      "other-or-unclear",
-    ])
-    .describe(
-      "Map to one of the 3 ICP buckets in the spine, or 'other-or-unclear'.",
-    ),
+  buyerType: BuyerTypeSchema.describe(
+    "Map to one of the 6 ICP buckets in the spine, or 'other-or-unclear' if signals are insufficient. WordPress / Magento / CRA / Drupal shops are 'headless-*-migration' — NOT 'other-or-unclear'.",
+  ),
 });
 export type Prospect = z.infer<typeof ProspectSchema>;
 
 export const ParseResultSchema = z.object({
-  ok: z
-    .boolean()
-    .describe(
-      "True if a usable prospect could be extracted; false if the paste is too short / unparseable.",
-    ),
-  prospect: ProspectSchema.optional().describe(
-    "The extracted prospect. Required when ok=true.",
-  ),
+  prospect: ProspectSchema,
   confidence: z
     .enum(["low", "medium", "high"])
-    .optional()
     .describe(
-      "Confidence in the extracted prospect signals. Required when ok=true.",
+      "Confidence in the extracted signals. high = company+role+stage+signals+pains all present. medium = some Unknowns but enough to ground sections. low = mostly sparse, sections will hedge.",
     ),
-  reason: z
-    .enum(["too-short", "no-company", "no-context", "garbled"])
-    .optional()
-    .describe("Why the paste was unusable. Required when ok=false."),
-  suggestion: z
-    .string()
-    .optional()
+  missingSignals: z
+    .array(
+      z.enum([
+        "company-name",
+        "industry",
+        "contact-role",
+        "company-stage",
+        "tech-stack",
+        "pain-points",
+        "decision-criteria",
+        "timeline",
+        "budget",
+        "competition",
+      ]),
+    )
+    .max(10)
     .describe(
-      "Friendly 1-sentence suggestion for what to add. Required when ok=false.",
+      "Which key signal categories are absent or weak. Used to coach the rep on what to gather next.",
     ),
 });
 
-export type ParseResultRaw = z.infer<typeof ParseResultSchema>;
-export type ParseResult =
-  | { ok: true; prospect: Prospect; confidence: "low" | "medium" | "high" }
-  | {
-      ok: false;
-      reason: "too-short" | "no-company" | "no-context" | "garbled";
-      suggestion: string;
-    };
-
-export function narrowParseResult(raw: ParseResultRaw): ParseResult {
-  if (raw.ok) {
-    if (!raw.prospect || !raw.confidence) {
-      return {
-        ok: false,
-        reason: "garbled",
-        suggestion:
-          "Model returned ok=true without a complete prospect — try resubmitting with more context.",
-      };
-    }
-    return { ok: true, prospect: raw.prospect, confidence: raw.confidence };
-  }
-  return {
-    ok: false,
-    reason: raw.reason ?? "garbled",
-    suggestion:
-      raw.suggestion ??
-      "Try adding company name, role, industry, and a pain point or two.",
-  };
-}
+export type ParseResult = z.infer<typeof ParseResultSchema>;
 
 export const SnapshotSchema = z.object({
   buyerType: z.string(),

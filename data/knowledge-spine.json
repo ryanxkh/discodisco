@@ -49,15 +49,18 @@
     {
       "id": "icp-buyer-types",
       "type": "icp",
-      "title": "ICP — three buyer profiles where Vercel actually fits",
-      "one_liner": "Next.js-native growth startups, enterprise digital commerce, and AI-native product teams. Outside these, qualify hard.",
+      "title": "ICP — six buyer profiles where Vercel actually fits",
+      "one_liner": "Next.js-native, headless-CMS migrators, headless-commerce migrators, custom-SPA migrators, enterprise digital commerce, and AI-native teams. Migration shops (WordPress, Magento, CRA, etc.) are core ICP — not anti-ICP.",
       "facts": [
-        "**Next.js-native growth startups (Series A–C, ~10–100 eng):** Already on Next.js or about to be. Pain: own infra is slowing shipping; AWS bill creeping. Decision driver: DX + speed-to-ship. Champion is usually a senior IC or eng lead.",
-        "**Enterprise digital commerce / B2C (retail, media, travel):** Black Friday / peak-traffic problems, A/B testing velocity, conversion lift. Champion: dir/VP of digital + a frontend platform team. Decision driver: ISR + edge perf + preview envs.",
+        "**Next.js-native growth startups (Series A–C, ~10–100 eng):** Already on Next.js or about to be. Pain: own infra slowing shipping. Decision driver: DX + speed-to-ship. Champion: senior IC / eng lead.",
+        "**Headless CMS migration (WordPress, Drupal, Sitecore monoliths):** Brand needs page perf, SEO, and customer experience but is locked into a slow CMS. The 'kill the monolith' move is incremental — keep WP as content backend, render with Next.js. Champion: lead dev or VP eng who already feels the pain. Anchor case studies: Cruise Critic.",
+        "**Headless commerce migration (Magento, WooCommerce, BigCommerce, Salesforce Commerce):** Conversion / Black Friday / mobile perf pressure. Composable commerce on Next.js + ISR + edge is the modern answer. Champion: dir of digital + lead eng. Pain often surfaces as 'we lost $X during peak.'",
+        "**Custom SPA migration (CRA, Vue SPA, custom React):** SEO gaps, slow first paint, build-time complexity. Migration to Next.js App Router is exactly what we did with Grep. Champion: VP eng / staff engineer.",
+        "**Enterprise digital commerce / B2C (retail, media, travel):** Black Friday / peak-traffic problems, A/B testing velocity, conversion lift. Decision driver: ISR + edge perf + preview envs. Anchor: Helly Hansen, sportswear NYSE retailer.",
         "**AI-native product teams:** Building chatbots/agents/copilots, hitting Lambda cost ceilings on idle waits. Decision driver: Fluid Active CPU + Gateway unification. Champion: founding eng or AI platform lead.",
-        "Anti-ICP signals: WebSocket-heavy realtime (no native support), heavy background-job workloads (need Inngest/QStash/Trigger.dev), strict on-prem / air-gap / FedRAMP-required, frameworks-other-than-Next where Netlify or Cloudflare may serve as well."
+        "Genuine anti-ICP signals (qualify hard): WebSocket-heavy realtime as the core product (no native support), background-job-heavy workloads as the core product (need Inngest/QStash/Trigger.dev), strict on-prem / air-gap / FedRAMP-required environments, customer who only wants a static-site host with no dynamic behavior."
       ],
-      "use_when": "Always — gates whether Vercel is even the right call before going deeper."
+      "use_when": "Always. Note: a prospect on WordPress / Magento / CRA / Wix / etc. is NOT anti-ICP — that is the migration motion. Discovery is figuring out which of the 6 buckets fits and whether the timing/pain is right, not whether the buyer is 'allowed' to be a Vercel customer."
     },
     {
       "id": "case-study-bank",

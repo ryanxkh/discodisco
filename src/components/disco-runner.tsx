@@ -35,7 +35,7 @@ type RunState = {
     stage: string;
   };
   confidence?: "low" | "medium" | "high";
-  parseError?: { reason: string; suggestion: string };
+  missingSignals?: string[];
   plan: SectionName[];
   sections: Partial<Record<SectionName, SectionState>>;
   fatalError?: string;
@@ -104,8 +104,12 @@ export function DiscoRunner() {
   function processEvent(ev: unknown) {
     startTransition(() => {
       const event = ev as
-        | { type: "parsed"; prospect: RunState["prospect"]; confidence: RunState["confidence"] }
-        | { type: "parse_error"; reason: string; suggestion: string }
+        | {
+            type: "parsed";
+            prospect: RunState["prospect"];
+            confidence: RunState["confidence"];
+            missingSignals: string[];
+          }
         | { type: "plan"; sections: SectionName[] }
         | {
             type: "section";
@@ -119,12 +123,11 @@ export function DiscoRunner() {
       setRun((prev) => {
         switch (event.type) {
           case "parsed":
-            return { ...prev, prospect: event.prospect, confidence: event.confidence };
-          case "parse_error":
             return {
               ...prev,
-              parseError: { reason: event.reason, suggestion: event.suggestion },
-              status: "done",
+              prospect: event.prospect,
+              confidence: event.confidence,
+              missingSignals: event.missingSignals,
             };
           case "plan": {
             const sections: RunState["sections"] = {};
@@ -221,31 +224,44 @@ export function DiscoRunner() {
         </Alert>
       )}
 
-      {run.parseError && (
-        <Alert>
-          <AlertTitle>I couldn&apos;t parse the prospect</AlertTitle>
-          <AlertDescription>{run.parseError.suggestion}</AlertDescription>
-        </Alert>
-      )}
-
-      {run.prospect && !run.parseError && (
+      {run.prospect && (
         <Card className="border-dashed">
-          <CardContent className="py-4 flex items-center gap-3 flex-wrap text-xs">
-            <Badge variant="outline" className="font-mono">
-              {run.prospect.company}
-            </Badge>
-            <span className="text-muted-foreground">{run.prospect.industry}</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">{run.prospect.role}</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">{run.prospect.stage}</span>
-            {run.confidence && (
-              <Badge
-                variant="secondary"
-                className="ml-auto text-xs font-mono"
-              >
-                parse: {run.confidence}
+          <CardContent className="py-4 space-y-3 text-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge variant="outline" className="font-mono">
+                {run.prospect.company}
               </Badge>
+              <span className="text-muted-foreground">
+                {run.prospect.industry}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">{run.prospect.role}</span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">{run.prospect.stage}</span>
+              {run.confidence && (
+                <Badge
+                  variant={
+                    run.confidence === "high"
+                      ? "default"
+                      : run.confidence === "medium"
+                        ? "secondary"
+                        : "outline"
+                  }
+                  className="ml-auto text-xs font-mono"
+                >
+                  parse: {run.confidence}
+                </Badge>
+              )}
+            </div>
+            {run.missingSignals && run.missingSignals.length > 0 && (
+              <div className="text-muted-foreground leading-relaxed">
+                <span className="text-foreground/80 font-medium">
+                  Missing context:
+                </span>{" "}
+                {run.missingSignals.map((s) => s.replace(/-/g, " ")).join(", ")}
+                . Sections will hedge accordingly — add these to sharpen the
+                output.
+              </div>
             )}
           </CardContent>
         </Card>

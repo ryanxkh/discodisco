@@ -3,16 +3,17 @@ import { generateSection } from "./generate";
 import {
   SECTIONS_FOR_MODE,
   type Mode,
+  type ParseResult,
   type Prospect,
   type SectionName,
 } from "./schemas";
 
 export type StreamEvent =
-  | { type: "parsed"; prospect: Prospect; confidence: "low" | "medium" | "high" }
   | {
-      type: "parse_error";
-      reason: "too-short" | "no-company" | "no-context" | "garbled";
-      suggestion: string;
+      type: "parsed";
+      prospect: Prospect;
+      confidence: "low" | "medium" | "high";
+      missingSignals: ParseResult["missingSignals"];
     }
   | { type: "plan"; sections: SectionName[] }
   | {
@@ -29,22 +30,19 @@ export async function* runPipeline(
   mode: Mode,
 ): AsyncGenerator<StreamEvent> {
   const parsed = await parseProspect(paste);
-  if (!parsed.ok) {
-    yield {
-      type: "parse_error",
-      reason: parsed.reason,
-      suggestion: parsed.suggestion,
-    };
-    return;
-  }
-  yield { type: "parsed", prospect: parsed.prospect, confidence: parsed.confidence };
+  yield {
+    type: "parsed",
+    prospect: parsed.prospect,
+    confidence: parsed.confidence,
+    missingSignals: parsed.missingSignals,
+  };
 
   const sections = SECTIONS_FOR_MODE[mode];
   yield { type: "plan", sections };
 
   // Fan out section generation in parallel and yield as each settles.
   const tasks = sections.map((name) =>
-    generateSection(name, parsed.prospect, mode)
+    generateSection(name, parsed.prospect, mode, parsed.confidence)
       .then((res) => ({ ok: true as const, res }))
       .catch((err: unknown) => ({
         ok: false as const,

@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 90;
 
 const RequestSchema = z.object({
-  paste: z.string().min(1),
+  paste: z.string().min(30, "Paste at least a sentence of context."),
   mode: ModeSchema,
 });
 

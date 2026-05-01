@@ -7,7 +7,8 @@ import type { Mode, SectionName } from "../src/lib/schemas";
 type EvalInput = { paste: string; mode: Mode };
 type EvalOutput = {
   prospect?: unknown;
-  parseError?: { reason: string; suggestion: string };
+  confidence?: "low" | "medium" | "high";
+  missingSignals?: string[];
   sections: Partial<Record<SectionName, unknown>>;
   errors: Array<{ name: SectionName; error: string }>;
 };
@@ -61,6 +62,38 @@ const cases: Array<{
   },
   {
     input: {
+      mode: "ae",
+      paste:
+        "Brian Pohl at Establish the Run (ETR) — premium fantasy sports analytics, profitable subscription business, peak around NFL season. WordPress + WooCommerce monolith on AWS, brittle. Brian is sole engineer who understands the system, two juniors. Big pain: production→staging migration is manual, batch admin work fragmented, support is slow because data lives across systems. Open to incremental modernization (headless WordPress + Next.js style), but conservative — cannot disrupt during NFL season. Asked for working sessions.",
+    },
+    metadata: {
+      profile: "wordpress-headless-migration",
+      expectedBuyerType: "headless-cms-migration",
+    },
+  },
+  {
+    input: {
+      mode: "ae",
+      paste: "brian @ etr - wordpress shop exploring modernization",
+    },
+    metadata: {
+      profile: "one-line-sdr-handoff",
+      expectedBuyerType: "headless-cms-migration",
+    },
+  },
+  {
+    input: {
+      mode: "sa",
+      paste:
+        "Discovery call transcript excerpt — Mark (CTO, Carbide Commerce, B2B parts marketplace, ~$40M GMV/yr): \"Yeah so we're on Magento 2 right now. We've been on it for like 6 years. The reality is the storefront is just slow. Mobile Lighthouse is 38. Our checkout conversion on mobile is half what desktop is, and mobile is 70% of our traffic. We've been talking about going headless for a while. We tried a Hydrogen POC last year — got pretty far but the team didn't have the React depth and we had to shelve it. Engineering team is 8 people. We're heading into Q4 which is our peak. I don't want to break anything before then but I'd like to start scoping this out for January.\" Rep notes: Mark's the buyer + likely champion. Likely competing against staying on Magento 2 + Hydrogen redo.",
+    },
+    metadata: {
+      profile: "magento-headless-commerce-transcript",
+      expectedBuyerType: "headless-commerce-migration",
+    },
+  },
+  {
+    input: {
       mode: "sa",
       paste:
         "Drift Inc — B2B SaaS, ~250 engineers. Their main customer-facing app is a 6-year-old Create React App SPA hosted on AWS S3 + CloudFront with a Node API on EKS. Engineering leadership wants to migrate to Next.js for SEO + perf. They've heard about Vercel but nervous about the migration cost. Champion: VP Eng. Critical event: they want to start migration in Q3 and have a Black Friday-equivalent peak shopping season in November.",
@@ -78,9 +111,8 @@ async function runOnce(input: EvalInput): Promise<EvalOutput> {
     switch (ev.type) {
       case "parsed":
         out.prospect = ev.prospect;
-        break;
-      case "parse_error":
-        out.parseError = { reason: ev.reason, suggestion: ev.suggestion };
+        out.confidence = ev.confidence;
+        out.missingSignals = ev.missingSignals;
         break;
       case "section":
         out.sections[ev.name] = ev.data;
@@ -149,7 +181,9 @@ async function judge(prompt: string, system: string) {
 }
 
 async function specificity({ output }: { output: EvalOutput }) {
-  if (output.parseError) return { name: "specificity", score: null };
+  if (Object.keys(output.sections).length === 0) {
+    return { name: "specificity", score: null };
+  }
   const sectionsText = JSON.stringify(output.sections, null, 2);
   const system = `You are auditing a Vercel sales-prep packet. Decide whether the model produced SPECIFIC, defensible content vs. generic SaaS-speak.
 
@@ -170,7 +204,7 @@ E: Entirely generic — no specific Vercel anchors at all.`;
 }
 
 async function faithfulness({ output }: { output: EvalOutput }) {
-  if (output.parseError || !output.prospect) {
+  if (!output.prospect || Object.keys(output.sections).length === 0) {
     return { name: "faithfulness", score: null };
   }
   const sectionsText = JSON.stringify(output.sections, null, 2);

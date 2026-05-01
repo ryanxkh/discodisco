@@ -68,6 +68,7 @@ async function _generateSection(
   section: SectionName,
   prospect: Prospect,
   mode: Mode,
+  confidence: "low" | "medium" | "high" = "high",
 ): Promise<SectionResult> {
   const chunks = await retrieveForSection(prospect, section);
   const instructions = SECTION_INSTRUCTIONS[section](mode);
@@ -79,10 +80,15 @@ Mode: ${mode === "ae" ? "AE — fast, concise, copy-paste-friendly" : "SE/SA —
 Always-in-context spine (treat as ground truth):
 ${spineForPrompt()}
 
-${chunks.length > 0 ? `Section-scoped retrieved context (use these facts; cite via natural phrasing — do NOT include URLs unless given):\n\n${chunksForPrompt(chunks)}\n\n` : ""}Rules:
+${chunks.length > 0 ? `Section-scoped retrieved context (use these facts; cite via natural phrasing — do NOT include URLs unless given):\n\n${chunksForPrompt(chunks)}\n\n` : ""}Parser confidence in the prospect: **${confidence}**.
+${confidence === "low" ? "The paste was sparse. DO NOT invent specific numbers, headcounts, deal stages, committee members, dates, or critical events that aren't in the prospect facts. Hedge ('likely', 'often in deals like this'). For unclear buyer types, lean into questions that REVEAL Vercel fit rather than assuming it. Returning fewer items > fabricated ones." : confidence === "medium" ? "Mixed signal density. Stick to facts in the prospect; mark inferences with hedge language ('likely', 'in similar deals')." : "Strong signal density. You can be specific — but never invent prospect-specific facts (headcounts, committee names, exact dates) that aren't grounded in the parsed facts."}
+
+Rules (always):
 - Ground claims in the spine + retrieved context. If a fact isn't supported, omit it.
-- Do not leak content tagged 'objections' into other sections (you only see section-scoped chunks, but be careful not to invent objections-style content elsewhere).
-- Be specific. Avoid generic SaaS advice.
+- Never invent prospect-specific numbers, names, or dates. The parsed prospect facts are the only source of truth about THIS buyer.
+- A prospect on WordPress / Magento / WooCommerce / Drupal / CRA / etc. is a migration motion, not a disqualification. Lean into the headless / migration angle when the buyerType is one of the *-migration buckets.
+- Do not leak content tagged 'objections' into other sections.
+- Be specific about VERCEL features, customers, and numbers (the spine and corpus are full of real ones). Be hedged about the prospect's specifics unless they're stated.
 - Output MUST conform to the schema.`;
 
   const userPrompt = `Section: ${section}
