@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 
-const DAILY_LIMIT = 10;
+const DAILY_LIMIT = 50;
 
 let _sql: ReturnType<typeof neon> | null = null;
 function getSql() {
