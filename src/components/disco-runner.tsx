@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Check, Copy, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,7 +70,6 @@ export function DiscoRunner() {
     sections: {},
   });
   const [activeSection, setActiveSection] = useState<SectionName | null>(null);
-  const [, startTransition] = useTransition();
   const inputCardRef = useRef<HTMLDivElement>(null);
 
   // Hydrate paste + mode from localStorage on mount
@@ -146,63 +145,61 @@ export function DiscoRunner() {
   }
 
   function processEvent(ev: unknown) {
-    startTransition(() => {
-      const event = ev as
-        | {
-            type: "parsed";
-            prospect: RunState["prospect"];
-            confidence: RunState["confidence"];
-            missingSignals: string[];
-          }
-        | { type: "plan"; sections: SectionName[] }
-        | {
-            type: "section";
-            name: SectionName;
-            data: unknown;
-            citations: SectionState["citations"];
-          }
-        | { type: "section_error"; name: SectionName; error: string }
-        | { type: "done" };
-
-      setRun((prev) => {
-        switch (event.type) {
-          case "parsed":
-            return {
-              ...prev,
-              prospect: event.prospect,
-              confidence: event.confidence,
-              missingSignals: event.missingSignals,
-            };
-          case "plan": {
-            const sections: RunState["sections"] = {};
-            for (const s of event.sections)
-              sections[s] = { status: "pending" };
-            return { ...prev, plan: event.sections, sections };
-          }
-          case "section":
-            return {
-              ...prev,
-              sections: {
-                ...prev.sections,
-                [event.name]: {
-                  status: "ready",
-                  data: event.data,
-                  citations: event.citations,
-                },
-              },
-            };
-          case "section_error":
-            return {
-              ...prev,
-              sections: {
-                ...prev.sections,
-                [event.name]: { status: "error", error: event.error },
-              },
-            };
-          default:
-            return prev;
+    const event = ev as
+      | {
+          type: "parsed";
+          prospect: RunState["prospect"];
+          confidence: RunState["confidence"];
+          missingSignals: string[];
         }
-      });
+      | { type: "plan"; sections: SectionName[] }
+      | {
+          type: "section";
+          name: SectionName;
+          data: unknown;
+          citations: SectionState["citations"];
+        }
+      | { type: "section_error"; name: SectionName; error: string }
+      | { type: "done" };
+
+    setRun((prev) => {
+      switch (event.type) {
+        case "parsed":
+          return {
+            ...prev,
+            prospect: event.prospect,
+            confidence: event.confidence,
+            missingSignals: event.missingSignals,
+          };
+        case "plan": {
+          const sections: RunState["sections"] = {};
+          for (const s of event.sections)
+            sections[s] = { status: "pending" };
+          return { ...prev, plan: event.sections, sections };
+        }
+        case "section":
+          return {
+            ...prev,
+            sections: {
+              ...prev.sections,
+              [event.name]: {
+                status: "ready",
+                data: event.data,
+                citations: event.citations,
+              },
+            },
+          };
+        case "section_error":
+          return {
+            ...prev,
+            sections: {
+              ...prev.sections,
+              [event.name]: { status: "error", error: event.error },
+            },
+          };
+        default:
+          return prev;
+      }
     });
   }
 
