@@ -214,34 +214,47 @@ export function DiscoRunner() {
     });
   }
 
-  // Track which section is currently in viewport for nav active state
+  // Track which section is currently in viewport for nav active state.
+  // Only depends on plan length — sections updating doesn't change which
+  // anchors to observe, just their content.
   useEffect(() => {
     if (run.plan.length === 0) return;
-    const ids = run.plan.map(sectionAnchor);
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (elements.length === 0) return;
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      return;
+    }
+    const planSnapshot = run.plan;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]) {
-          const id = visible[0].target.id;
-          const name = run.plan.find((n) => sectionAnchor(n) === id);
-          if (name) setActiveSection(name);
-        }
-      },
-      {
-        rootMargin: "-80px 0px -50% 0px",
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      },
-    );
-    for (const el of elements) observer.observe(el);
-    return () => observer.disconnect();
-  }, [run.plan, run.sections]);
+    let cancelled = false;
+    const setup = () => {
+      if (cancelled) return null;
+      const elements = planSnapshot
+        .map((n) => document.getElementById(sectionAnchor(n)))
+        .filter((el): el is HTMLElement => el !== null);
+      if (elements.length === 0) return null;
+      const obs = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          if (visible[0]) {
+            const id = visible[0].target.id;
+            const name = planSnapshot.find((n) => sectionAnchor(n) === id);
+            if (name) setActiveSection(name);
+          }
+        },
+        { rootMargin: "-80px 0px -50% 0px", threshold: [0, 0.5, 1] },
+      );
+      for (const el of elements) obs.observe(el);
+      return obs;
+    };
+
+    let observer: IntersectionObserver | null = setup();
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      observer = null;
+    };
+  }, [run.plan]);
 
   const isStreaming = run.status === "streaming";
   const hasResults = run.status !== "idle" && run.plan.length > 0;
@@ -696,9 +709,7 @@ function SectionCard({
             </Alert>
           )}
           {isReady && (
-            <div className="animate-in fade-in slide-in-from-bottom-1 duration-500">
-              <SectionDispatcher name={name} data={state.data} mode={mode} />
-            </div>
+            <SectionDispatcher name={name} data={state.data} mode={mode} />
           )}
         </div>
       </CardContent>
