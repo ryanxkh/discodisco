@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -7,9 +7,15 @@ import { count, sql } from "drizzle-orm";
 import { getDb } from "../src/db";
 import { corpusChunks } from "../src/db/schema";
 import { chunkMarkdown } from "../src/lib/chunking";
-import { sectionsForFile, SOURCE_FILES } from "../src/lib/sections";
+import { sectionsForFile, SOURCE_FILES, type Section } from "../src/lib/sections";
 
 const RESEARCH_DIR = join(homedir(), "Projects/vercel/interview-prep/research");
+const METHODOLOGY_DIR = join(process.cwd(), "data/methodology");
+const METHODOLOGY_SECTIONS: Section[] = ["discovery", "objections"];
+const CASE_STUDIES_DIR = join(process.cwd(), "data/case-studies");
+const CASE_STUDIES_SECTIONS: Section[] = ["case-study"];
+const DISCOVERY_CALLS_DIR = join(process.cwd(), "data/discovery-calls");
+const DISCOVERY_CALLS_SECTIONS: Section[] = ["discovery", "objections"];
 const EMBED_MODEL = "openai/text-embedding-3-small";
 const EMBED_BATCH = 32;
 const RESET_FLAG = process.argv.includes("--reset");
@@ -74,12 +80,9 @@ async function main() {
       (FORCE_FILES.length === 0 || FORCE_FILES.includes(f)) && !done.has(f),
   );
 
-  if (filesToProcess.length === 0) {
-    console.log("✓ Nothing to do — all files already ingested.");
-    return;
+  if (filesToProcess.length > 0) {
+    console.log(`→ ${filesToProcess.length} research file(s) to process.`);
   }
-
-  console.log(`→ ${filesToProcess.length} file(s) to process.`);
 
   for (const filename of filesToProcess) {
     const path = join(RESEARCH_DIR, filename);
@@ -90,33 +93,124 @@ async function main() {
       console.warn(`  ⚠ skipped (missing): ${filename}`);
       continue;
     }
-    const chunks = chunkMarkdown(raw);
-    const sections = sectionsForFile(filename);
-    const title = deriveTitle(filename);
-    console.log(`  ${filename} → ${chunks.length} chunks [${sections.join(", ")}]`);
+    await ingestFile({
+      sourceFile: filename,
+      sourceTitle: deriveTitle(filename),
+      raw,
+      sections: sectionsForFile(filename),
+    });
+  }
 
-    let embedded = 0;
-    for (let i = 0; i < chunks.length; i += EMBED_BATCH) {
-      const batch = chunks.slice(i, i + EMBED_BATCH);
-      const embeddings = await embedWithBackoff(batch.map((c) => c.content));
-      const rows = batch.map((c, idx) => ({
-        sourceFile: filename,
-        sourceTitle: title,
-        headerPath: c.headerPath,
-        sections,
-        content: c.content,
-        tokenCount: c.tokenCount,
-        embedding: embeddings[idx],
-      }));
-      await db.insert(corpusChunks).values(rows);
-      embedded += rows.length;
-      process.stdout.write(`\r    embedded ${embedded}/${chunks.length}`);
+  // Methodology corpus (MEDDPICC, Command of the Message, SPICED, Challenger).
+  let methodologyFiles: string[] = [];
+  try {
+    methodologyFiles = (await readdir(METHODOLOGY_DIR))
+      .filter((f) => f.endsWith(".md"))
+      .sort();
+  } catch {
+    // directory may not exist yet
+  }
+  const methodologyToDo = methodologyFiles.filter(
+    (f) => !done.has(`methodology/${f}`),
+  );
+  if (methodologyToDo.length > 0) {
+    console.log(`→ ${methodologyToDo.length} methodology file(s) to process.`);
+    for (const filename of methodologyToDo) {
+      const raw = await readFile(join(METHODOLOGY_DIR, filename), "utf8");
+      await ingestFile({
+        sourceFile: `methodology/${filename}`,
+        sourceTitle: deriveTitle(filename),
+        raw,
+        sections: METHODOLOGY_SECTIONS,
+      });
     }
-    process.stdout.write("\n");
+  }
+
+  // Vercel customer case studies (long-tail, scraped from vercel.com/customers).
+  let caseStudyFiles: string[] = [];
+  try {
+    caseStudyFiles = (await readdir(CASE_STUDIES_DIR))
+      .filter((f) => f.endsWith(".md"))
+      .sort();
+  } catch {
+    // directory may not exist yet
+  }
+  const caseStudiesToDo = caseStudyFiles.filter(
+    (f) => !done.has(`case-studies/${f}`),
+  );
+  if (caseStudiesToDo.length > 0) {
+    console.log(`→ ${caseStudiesToDo.length} case-study file(s) to process.`);
+    for (const filename of caseStudiesToDo) {
+      const raw = await readFile(join(CASE_STUDIES_DIR, filename), "utf8");
+      await ingestFile({
+        sourceFile: `case-studies/${filename}`,
+        sourceTitle: deriveTitle(filename),
+        raw,
+        sections: CASE_STUDIES_SECTIONS,
+      });
+    }
+  }
+
+  // Real B2B discovery call walkthroughs (30MPC, Gong Labs, etc.).
+  let discoveryCallFiles: string[] = [];
+  try {
+    discoveryCallFiles = (await readdir(DISCOVERY_CALLS_DIR))
+      .filter((f) => f.endsWith(".md"))
+      .sort();
+  } catch {
+    // directory may not exist yet
+  }
+  const discoveryCallsToDo = discoveryCallFiles.filter(
+    (f) => !done.has(`discovery-calls/${f}`),
+  );
+  if (discoveryCallsToDo.length > 0) {
+    console.log(
+      `→ ${discoveryCallsToDo.length} discovery-call file(s) to process.`,
+    );
+    for (const filename of discoveryCallsToDo) {
+      const raw = await readFile(join(DISCOVERY_CALLS_DIR, filename), "utf8");
+      await ingestFile({
+        sourceFile: `discovery-calls/${filename}`,
+        sourceTitle: deriveTitle(filename),
+        raw,
+        sections: DISCOVERY_CALLS_SECTIONS,
+      });
+    }
   }
 
   const [{ total }] = await db.select({ total: count() }).from(corpusChunks);
   console.log(`✓ corpus_chunks now contains ${total} rows`);
+}
+
+async function ingestFile(params: {
+  sourceFile: string;
+  sourceTitle: string;
+  raw: string;
+  sections: Section[];
+}) {
+  const db = getDb();
+  const chunks = chunkMarkdown(params.raw);
+  console.log(
+    `  ${params.sourceFile} → ${chunks.length} chunks [${params.sections.join(", ")}]`,
+  );
+  let embedded = 0;
+  for (let i = 0; i < chunks.length; i += EMBED_BATCH) {
+    const batch = chunks.slice(i, i + EMBED_BATCH);
+    const embeddings = await embedWithBackoff(batch.map((c) => c.content));
+    const rows = batch.map((c, idx) => ({
+      sourceFile: params.sourceFile,
+      sourceTitle: params.sourceTitle,
+      headerPath: c.headerPath,
+      sections: params.sections,
+      content: c.content,
+      tokenCount: c.tokenCount,
+      embedding: embeddings[idx],
+    }));
+    await db.insert(corpusChunks).values(rows);
+    embedded += rows.length;
+    process.stdout.write(`\r    embedded ${embedded}/${chunks.length}`);
+  }
+  process.stdout.write("\n");
 }
 
 main().catch((err) => {

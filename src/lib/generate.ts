@@ -83,13 +83,31 @@ ${spineForPrompt()}
 ${chunks.length > 0 ? `Section-scoped retrieved context (use these facts; cite via natural phrasing — do NOT include URLs unless given):\n\n${chunksForPrompt(chunks)}\n\n` : ""}Parser confidence in the prospect: **${confidence}**.
 ${confidence === "low" ? "The paste was sparse. DO NOT invent specific numbers, headcounts, deal stages, committee members, dates, or critical events that aren't in the prospect facts. Hedge ('likely', 'often in deals like this'). For unclear buyer types, lean into questions that REVEAL Vercel fit rather than assuming it. Returning fewer items > fabricated ones." : confidence === "medium" ? "Mixed signal density. Stick to facts in the prospect; mark inferences with hedge language ('likely', 'in similar deals')." : "Strong signal density. You can be specific — but never invent prospect-specific facts (headcounts, committee names, exact dates) that aren't grounded in the parsed facts."}
 
-Rules (always):
+**Anti-invention rules (HARD — applies to ALL sections):**
+The parsed prospect facts are the ONLY source of truth about THIS buyer. Never assert any of the following unless it's literally in the parsed facts or quoted in the paste:
+- Specific named stakeholders or champions ("the CTO is John", "VP Eng is the EB")
+- Numeric specifics about the prospect: headcount, ARR, deal size, build times, traffic, conversion rates, % numbers
+- Specific dates, deadlines, quarters, or critical events
+- Named competitors the prospect is evaluating ("they're looking at Cloudflare and Netlify")
+- Internal decisions the prospect has made ("they've already chosen to migrate", "they've ruled out X")
+- Procurement, security, or legal review steps the prospect runs
+
+If a fact isn't in the parsed prospect, EITHER omit it OR phrase it as a question/hypothesis ("likely", "often see in similar deals", "worth confirming whether…"). Generic Vercel facts (features, real customer outcomes from the spine/corpus) are fine — but anchoring them to THIS prospect's situation requires real signals.
+
+**Discovery-specific:** Questions ASK, they don't ASSUME. "Who's the economic buyer?" is correct; "Confirm with the VP Eng (EB) that…" is wrong unless the VP Eng was named as EB. If you can't tag a question with MEDDPICC+SPICED without inventing facts, change the question — don't fabricate the framing.
+
+**Objections-specific:** Pick objections that match the buyer's STATED scale and stage. Don't choose enterprise procurement objections for an unconfirmed startup, or startup-pricing objections for a stated enterprise.
+
+**Case-study-specific:** Match on real signals (industry, stage, technical migration motion). If no case study in the corpus is a strong match, pick the closest one and explicitly hedge ("closest analog by motion, though industry differs"). Do not invent customer outcomes that aren't in the corpus.
+
+Other rules:
 - Ground claims in the spine + retrieved context. If a fact isn't supported, omit it.
-- Never invent prospect-specific numbers, names, or dates. The parsed prospect facts are the only source of truth about THIS buyer.
 - A prospect on WordPress / Magento / WooCommerce / Drupal / CRA / etc. is a migration motion, not a disqualification. Lean into the headless / migration angle when the buyerType is one of the *-migration buckets.
 - Do not leak content tagged 'objections' into other sections.
 - Be specific about VERCEL features, customers, and numbers (the spine and corpus are full of real ones). Be hedged about the prospect's specifics unless they're stated.
-- Output MUST conform to the schema.`;
+- Output MUST conform to the schema.
+
+**Self-check before returning:** For each claim about the prospect, ask "Is this in the parsed facts?" If not, either remove it, hedge it heavily, or convert it to a question.`;
 
   const userPrompt = `Section: ${section}
 Prospect:

@@ -103,6 +103,50 @@ const cases: Array<{
       expectedBuyerType: "next-native-startup",
     },
   },
+  {
+    input: {
+      mode: "sa",
+      paste:
+        "Discovery call with Robert Norman, Principal Software Engineer at Cruise Critic (Tripadvisor subsidiary, ~6M monthly visitors, travel review site). They're on a tightly coupled monolithic PHP application — even small UI changes require complex rewrites. Build times are around 30 minutes and they ship to prod 'days or weeks' apart. Robert wants engineers focused on product, not infra. Organic search is the lifeblood of the business, so Core Web Vitals matter. Asking us to scope a Next.js migration.",
+    },
+    metadata: {
+      profile: "php-monolith-content-migration",
+      expectedBuyerType: "headless-cms-migration",
+    },
+  },
+  {
+    input: {
+      mode: "sa",
+      paste:
+        "Stably — 6-person AI testing agents startup, revenue-generating, just got into Vercel's AI Accelerator. Founders Jinjing Liang (ex-Google Chrome infra, CEO) and Neil (ex-Uber). Their agents deploy on preview URLs, analyze diffs, and click through apps to validate changes — also called by coding agents like Claude Code. Already on Vercel (AI Gateway, Sandbox, deployment infra). This call is expansion: they want to launch new product lines and internal Slack-bot agents in hours not weeks, and they're asking how far they can push Sandbox + AI Gateway TPM limits before re-architecting.",
+    },
+    metadata: {
+      profile: "ai-native-accelerator-expansion",
+      expectedBuyerType: "ai-native",
+    },
+  },
+  {
+    input: {
+      mode: "ae",
+      paste:
+        "gamma — sherwin yu, head of ai + product eng. ~20 engineers, 250+ deploys/day already on vercel. building gamma agent (conversational presentation editing). image gen pipeline across 60+ models / 20 providers, ~1.5B images. asked about ai sdk imagemodelv3 + whether vercel functions can keep up as they add agent state persistence. expansion conversation, not net new.",
+    },
+    metadata: {
+      profile: "ai-sdk-expansion-low-detail",
+      expectedBuyerType: "ai-native",
+    },
+  },
+  {
+    input: {
+      mode: "ae",
+      paste:
+        "SDR handoff: Helly Hansen — 150-year-old Norwegian apparel brand. Currently on an Adobe Commerce PWA (client-side rendering). Core Web Vitals are red across the board, load times 4+ seconds, CLS over 2.8. Marketing team is only able to ship 1 A/B test per month and BFCM is the make-or-break quarter. Anshika Jain (CDO) is the contact. They're open to an incremental migration starting with checkout to avoid disrupting attribution.",
+    },
+    metadata: {
+      profile: "adobe-commerce-pwa-incremental",
+      expectedBuyerType: "headless-commerce-migration",
+    },
+  },
 ];
 
 async function runOnce(input: EvalInput): Promise<EvalOutput> {

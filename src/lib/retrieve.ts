@@ -15,7 +15,7 @@ export type RetrievedChunk = {
 const EMBED_MODEL = "openai/text-embedding-3-small";
 const TOP_K_PER_SECTION: Record<SectionName, number> = {
   snapshot: 0,
-  discovery: 0,
+  discovery: 6,
   "product-map": 6,
   "case-study": 4,
   objections: 5,
@@ -42,6 +42,8 @@ function queryFor(prospect: Prospect, section: SectionName): string {
       return `${base}\nLikely objections and pushbacks for this buyer profile.`;
     case "competitive":
       return `${base}\nLikely competitor and differentiators relevant to this buyer.`;
+    case "discovery":
+      return `${base}\nDiscovery questions, MEDDPICC qualification, SPICED framework, and Command of the Message guidance for this buyer.`;
     default:
       return base;
   }

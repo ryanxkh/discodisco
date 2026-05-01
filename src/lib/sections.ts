@@ -2,13 +2,15 @@ export type Section =
   | "product-map"
   | "case-study"
   | "objections"
-  | "competitive";
+  | "competitive"
+  | "discovery";
 
 export const ALL_SECTIONS: Section[] = [
   "product-map",
   "case-study",
   "objections",
   "competitive",
+  "discovery",
 ];
 
 export function sectionsForFile(filename: string): Section[] {

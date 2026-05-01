@@ -11,10 +11,14 @@
     "db:push": "dotenv -e .env.local -- drizzle-kit push --force",
     "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "scrape:methodology": "dotenv -e .env.local -- tsx scripts/scrape-methodology.ts",
+    "scrape:case-studies": "dotenv -e .env.local -- tsx scripts/scrape-case-studies.ts",
+    "scrape:discovery-calls": "dotenv -e .env.local -- tsx scripts/scrape-discovery-calls.ts",
     "ingest": "dotenv -e .env.local -- tsx scripts/ingest.ts",
     "eval": "dotenv -e .env.local -- bt eval evals/discodisco.eval.ts"
   },
   "dependencies": {
+    "@mendable/firecrawl-js": "^4.20.1",
     "@neondatabase/serverless": "^1.1.0",
     "ai": "^6.0.171",
     "autoevals": "^0.0.132",
